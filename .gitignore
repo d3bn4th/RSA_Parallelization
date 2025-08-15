@@ -1,0 +1,51 @@
+# Build artifacts
+rsa_parallel
+rsa_serial
+rsa_naive
+*.exe
+*.o
+*.out
+*.a
+*.so
+*.dylib
+
+# CMake build directory
+build/
+cmake-build-*/
+
+# Profiling files
+gmon.out
+*.prof
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Test output
+test_results/
+performance_data/
+
+# Dependencies (if downloaded)
+deps/
+external/
+
+# Backup files
+*.bak
+*.backup

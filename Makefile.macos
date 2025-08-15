@@ -1,0 +1,127 @@
+# macOS Makefile for RSA Parallelization
+# Usage: make -f Makefile.macos
+
+# Compiler and flags
+CC = clang++
+CFLAGS = -std=c++11 -O2 -Wall -Wextra
+OPENMP_FLAGS = -Xpreprocessor -fopenmp -lomp
+
+# GMP library paths (Homebrew installation)
+GMP_INC = -I/opt/homebrew/include
+GMP_LIB = -L/opt/homebrew/lib -lgmp
+
+# OpenMP paths (Homebrew installation)
+OPENMP_INC = -I/opt/homebrew/Cellar/libomp/20.1.8/include
+OPENMP_LIB = -L/opt/homebrew/Cellar/libomp/20.1.8/lib
+
+# Source directory
+SRC_DIR = src
+
+# Default target
+all: rsa_parallel rsa_serial rsa_naive
+
+# Parallel modular exponentiation
+rsa_parallel: $(SRC_DIR)/parallel_modular_exponentiation.cpp
+	$(CC) $(CFLAGS) $(OPENMP_FLAGS) $(GMP_INC) $(OPENMP_INC) $(GMP_LIB) $(OPENMP_LIB) -o $@ $<
+
+# Serial RSA implementation
+rsa_serial: $(SRC_DIR)/rsa_serial.cpp
+	$(CC) $(CFLAGS) $(GMP_INC) $(GMP_LIB) -o $@ $<
+
+# Naive parallel RSA implementation
+rsa_naive: $(SRC_DIR)/rsa_parallel_naive_approach.cpp
+	$(CC) $(CFLAGS) $(OPENMP_FLAGS) $(GMP_INC) $(OPENMP_INC) $(GMP_LIB) $(OPENMP_LIB) -o $@ $<
+
+# Debug builds
+debug: CFLAGS += -g -DDEBUG
+debug: all
+
+# Release builds with maximum optimization
+release: CFLAGS += -O3 -march=native
+release: all
+
+# Profile builds
+profile: CFLAGS += -pg -O2
+profile: all
+
+# Clean build artifacts
+clean:
+	rm -f rsa_parallel rsa_serial rsa_naive *.o *.out gmon.out
+
+# Install dependencies (Homebrew)
+install-deps:
+	brew install gmp libomp
+
+# Check dependencies
+check-deps:
+	@echo "Checking dependencies..."
+	@if ! brew list gmp >/dev/null 2>&1; then \
+		echo "❌ GMP not found. Run: brew install gmp"; \
+	else \
+		echo "✅ GMP found"; \
+	fi
+	@if ! brew list libomp >/dev/null 2>&1; then \
+		echo "❌ OpenMP not found. Run: brew install libomp"; \
+	else \
+		echo "✅ OpenMP found"; \
+	fi
+
+# Run performance test
+test: all
+	@echo "=== Performance Comparison ==="
+	@echo ""
+	@echo "Serial RSA:"
+	@time ./rsa_serial examples/input.txt
+	@echo ""
+	@echo "Naive Parallel RSA (4 threads):"
+	@time ./rsa_naive examples/input.txt 4
+	@echo ""
+	@echo "Optimized Parallel RSA (4 threads):"
+	@time ./rsa_parallel 4
+
+# Run individual tests
+test-serial: rsa_serial
+	@echo "Testing Serial RSA..."
+	@time ./rsa_serial examples/input.txt
+
+test-naive: rsa_naive
+	@echo "Testing Naive Parallel RSA..."
+	@time ./rsa_naive examples/input.txt 4
+
+test-optimized: rsa_parallel
+	@echo "Testing Optimized Parallel RSA..."
+	@time ./rsa_parallel 4
+
+# Thread scaling test
+thread-scaling: rsa_parallel
+	@echo "=== Thread Scaling Test ==="
+	@for threads in 1 2 4 8 16; do \
+		echo "Testing with $$threads threads:"; \
+		time ./rsa_parallel $$threads; \
+		echo ""; \
+	done
+
+# Performance analysis with Instruments (macOS)
+profile-instruments: rsa_parallel
+	@echo "Profiling with Instruments..."
+	instruments -t Time\ Profiler ./rsa_parallel 4
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build all executables"
+	@echo "  debug            - Build with debug symbols"
+	@echo "  release          - Build with maximum optimization"
+	@echo "  profile          - Build with profiling support"
+	@echo "  clean            - Remove all executables and build artifacts"
+	@echo "  install-deps     - Install dependencies (Homebrew)"
+	@echo "  check-deps       - Check if dependencies are installed"
+	@echo "  test             - Run performance comparison test"
+	@echo "  test-serial      - Test serial implementation only"
+	@echo "  test-naive       - Test naive parallel implementation only"
+	@echo "  test-optimized   - Test optimized parallel implementation only"
+	@echo "  thread-scaling   - Test performance with different thread counts"
+	@echo "  profile-instruments - Profile with macOS Instruments"
+	@echo "  help             - Show this help message"
+
+.PHONY: all debug release profile clean install-deps check-deps test test-serial test-naive test-optimized thread-scaling profile-instruments help
