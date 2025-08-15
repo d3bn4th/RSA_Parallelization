@@ -63,13 +63,29 @@ sudo apt-get install libgmp-dev libomp-dev
 
 ```
 RSA_Parallelization/
-├── Makefile                              # Build configuration
-├── README.md                             # Original project documentation
-├── input.txt                             # Test input data
-├── parallel_modular_exponentiation.cpp   # Optimized parallel implementation
-├── rsa_serial.cpp                        # Serial implementation
-├── rsa_parallel_naive_approach.cpp       # Naive parallel implementation
-└── RSA_Parallelization_Documentation.md  # This documentation
+├── src/                          # Source code
+│   ├── parallel_modular_exponentiation.cpp  # Optimized parallel RSA
+│   ├── rsa_serial.cpp                       # Serial RSA implementation
+│   └── rsa_parallel_naive_approach.cpp      # Naive parallel RSA
+├── docs/                         # Documentation
+│   ├── QUICK_START.md            # Quick start guide
+│   ├── WINDOWS_SETUP.md          # Windows setup guide
+│   └── WINDOWS_QUICK_START.md    # Windows quick start
+├── scripts/                      # Build scripts
+│   ├── linux/build.sh            # Linux build script
+│   ├── macos/build.sh            # macOS build script
+│   └── windows/build_windows.bat # Windows build script
+├── examples/                     # Example data
+│   └── input.txt                 # Test input file
+├── tests/                        # Test files (ready for future use)
+├── build/                        # Build artifacts directory
+├── Makefile                      # Main Makefile (platform detection)
+├── Makefile.linux               # Linux-specific Makefile
+├── Makefile.macos               # macOS-specific Makefile
+├── Makefile.windows             # Windows-specific Makefile
+├── CMakeLists.txt               # Cross-platform CMake configuration
+├── .gitignore                   # Git ignore rules
+└── README.md                    # Comprehensive project documentation
 ```
 
 ## Build Configuration
