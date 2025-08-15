@@ -1,0 +1,78 @@
+# Windows Makefile for RSA Parallelization
+# Usage: mingw32-make -f Makefile.windows
+
+# Compiler and flags
+CC = g++
+CFLAGS = -std=c++11 -O2 -Wall
+OPENMP_FLAGS = -fopenmp
+
+# GMP library paths (adjust these based on your MSYS2 installation)
+GMP_INC = -I/mingw64/include
+GMP_LIB = -L/mingw64/lib -lgmp
+
+# Default target
+all: rsa_parallel.exe rsa_serial.exe rsa_naive.exe
+
+# Parallel modular exponentiation
+rsa_parallel.exe: parallel_modular_exponentiation.cpp
+	$(CC) $(CFLAGS) $(OPENMP_FLAGS) $(GMP_INC) $(GMP_LIB) -o $@ $<
+
+# Serial RSA implementation
+rsa_serial.exe: rsa_serial.cpp
+	$(CC) $(CFLAGS) $(GMP_INC) $(GMP_LIB) -o $@ $<
+
+# Naive parallel RSA implementation
+rsa_naive.exe: rsa_parallel_naive_approach.cpp
+	$(CC) $(CFLAGS) $(OPENMP_FLAGS) $(GMP_INC) $(GMP_LIB) -o $@ $<
+
+# Debug builds
+debug: CFLAGS += -g -DDEBUG
+debug: all
+
+# Release builds with maximum optimization
+release: CFLAGS += -O3 -march=native
+release: all
+
+# Clean build artifacts
+clean:
+	del /Q *.exe 2>nul || echo No executables to clean
+
+# Install dependencies (requires MSYS2)
+install-deps:
+	pacman -S mingw-w64-x86_64-gcc
+	pacman -S mingw-w64-x86_64-make
+	pacman -S mingw-w64-x86_64-gmp
+	pacman -S mingw-w64-x86_64-openmp
+
+# Copy required DLLs to current directory
+copy-dlls:
+	copy C:\msys64\mingw64\bin\libgmp-10.dll . 2>nul || echo GMP DLL not found
+	copy C:\msys64\mingw64\bin\libgcc_s_seh-1.dll . 2>nul || echo GCC DLL not found
+	copy C:\msys64\mingw64\bin\libstdc++-6.dll . 2>nul || echo STDC++ DLL not found
+
+# Run performance test
+test: all copy-dlls
+	@echo === Performance Comparison ===
+	@echo.
+	@echo Serial RSA:
+	@time rsa_serial.exe input.txt
+	@echo.
+	@echo Naive Parallel RSA (4 threads):
+	@time rsa_naive.exe input.txt 4
+	@echo.
+	@echo Optimized Parallel RSA (4 threads):
+	@time rsa_parallel.exe 4
+
+# Help target
+help:
+	@echo Available targets:
+	@echo   all          - Build all executables
+	@echo   debug        - Build with debug symbols
+	@echo   release      - Build with maximum optimization
+	@echo   clean        - Remove all executables
+	@echo   install-deps - Install required dependencies (MSYS2)
+	@echo   copy-dlls    - Copy required DLLs to current directory
+	@echo   test         - Run performance comparison test
+	@echo   help         - Show this help message
+
+.PHONY: all debug release clean install-deps copy-dlls test help
